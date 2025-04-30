@@ -6,6 +6,9 @@ import br.com.challenge6.domain.statementImport.StatementImport;
 import br.com.challenge6.repository.StatementImportRepository;
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvException;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -15,6 +18,7 @@ import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -57,8 +61,30 @@ public class StatementImportService {
         }
     }
 
-    public void importXLSX(String filePath) {
+    public void importXLSX(Long userId, String filePath) throws IOException {
+        StatementImport stmt = createStatementImport(userId, filePath);
+        try (XSSFWorkbook workbook = new XSSFWorkbook(Files.newInputStream(Paths.get(filePath)))) {
+            Sheet sheet = workbook.getSheetAt(0);
+            List<Investment> investments = new ArrayList<>();
 
+            for (Row row : sheet) {
+                if (row.getRowNum() == 0) continue;
+                investments.add(mapExcelRow(row));
+            }
+
+            validateData(investments);
+            investments.forEach(inv -> {
+                inv.setUserId(userId);
+                investmentService.addInvestment(mapper.map(inv, AddInvestmentDTO.class));
+            });
+
+            stmt.setStatus("COMPLETED");
+        } catch (Exception e) {
+            stmt.setStatus("FAILED");
+            throw e;
+        } finally {
+            statementImportRepository.save(stmt);
+        }
     }
 
     public void validateData(List<Investment> investments) {
@@ -94,6 +120,16 @@ public class StatementImportService {
         inv.setQuantity(Double.parseDouble(row[2]));
         inv.setBuyPrice(Double.parseDouble(row[3]));
         inv.setDate(LocalDate.parse(row[4]));
+        return inv;
+    }
+
+    private Investment mapExcelRow(Row row) {
+        Investment inv = new Investment();
+        inv.setAssetType(row.getCell(0).getStringCellValue());
+        inv.setTicker(row.getCell(1).getStringCellValue());
+        inv.setQuantity(row.getCell(2).getNumericCellValue());
+        inv.setBuyPrice(row.getCell(3).getNumericCellValue());
+        inv.setDate(row.getCell(4).getLocalDateTimeCellValue().toLocalDate());
         return inv;
     }
 }
