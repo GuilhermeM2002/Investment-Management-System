@@ -28,7 +28,7 @@ public class InvestmentService {
     }
 
     public List<GetInvestmentDTO> getInvestmentsByUser(String userEmail){
-        var investments = investmentRepository.findAllByEmail(userEmail);
+        var investments = investmentRepository.findAllByUserId(userEmail);
         return investments.stream()
                 .map(investment -> mapper
                         .map(investment, GetInvestmentDTO.class)).toList();

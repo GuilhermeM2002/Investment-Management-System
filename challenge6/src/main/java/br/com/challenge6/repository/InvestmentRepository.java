@@ -6,5 +6,5 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import java.util.List;
 
 public interface InvestmentRepository extends MongoRepository<Investment, Long> {
-    List<Investment> findAllByEmail(String email);
+    List<Investment> findAllByUserId(String email);
 }
