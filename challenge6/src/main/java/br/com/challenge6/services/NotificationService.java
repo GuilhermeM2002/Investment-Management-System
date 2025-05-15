@@ -70,7 +70,7 @@ public class NotificationService {
             if (variation <= -10) {
                 hasAlert = true;
                 alertContent.append(String.format(
-                        "🔻 Alerta: %s caiu %.2f%% desde a compra. Preço atual: R$%.2f, comprado por: R$%.2f\n",
+                        "Alerta: %s caiu %.2f%% desde a compra. Preço atual: R$%.2f, comprado por: R$%.2f\n",
                         inv.getTicker(), variation, currentPrice, buyPrice));
             }
         }
@@ -82,7 +82,25 @@ public class NotificationService {
     }
 
     public void notifyHighGain(List<Investment> investmentList, String userEmail){
+        StringBuilder alertContent = new StringBuilder();
+        boolean hasAlert = false;
 
+        for (Investment inv : investmentList) {
+            double currentPrice = getCurrentPrice(inv.getTicker());
+            double buyPrice = inv.getBuyPrice();
+
+            double variation = ((currentPrice - buyPrice) / buyPrice) * 100;
+
+            if(variation <= 10){
+                hasAlert = true;
+                alertContent.append(String.format(
+                        "Alerta: %s cresceu %.2f%% desde a compra. Preço atual: R$%.2f, comprado por: R$%.2f\n",
+                        inv.getTicker(), variation, currentPrice, buyPrice));
+            }
+        }
+        if (hasAlert){
+            sendEmail(userEmail, "🚨 Alerta de Investimentos", alertContent.toString());
+        }
     }
 
     private double getCurrentPrice(String ticker) {
