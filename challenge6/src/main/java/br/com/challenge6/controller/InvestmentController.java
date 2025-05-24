@@ -18,10 +18,10 @@ public class InvestmentController {
 
     @PostMapping
     public ResponseEntity<AddInvestmentDTO> createInvestment(@RequestBody AddInvestmentDTO dto, UriComponentsBuilder builder){
-        var uri = builder.path("/{id}").buildAndExpand(dto.id()).toUri();
-        investmentService.addInvestment(dto);
+        var newInvestment = investmentService.addInvestment(dto);
+        var uri = builder.path("/{id}").buildAndExpand(newInvestment.id()).toUri();
 
-        return ResponseEntity.created(uri).body(dto);
+        return ResponseEntity.created(uri).body(newInvestment);
     }
 
     @GetMapping
