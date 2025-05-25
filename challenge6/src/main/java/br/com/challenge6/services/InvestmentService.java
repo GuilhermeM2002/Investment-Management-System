@@ -27,15 +27,15 @@ public class InvestmentService {
         return mapper.map(savedInvestment, AddInvestmentDTO.class);
     }
 
-    public List<GetInvestmentDTO> getInvestmentsByUser(String userEmail){
-        var investments = investmentRepository.findAllByUserId(userEmail);
+    public List<GetInvestmentDTO> getInvestmentsByUser(Long id){
+        var investments = investmentRepository.findAllByUserId(id);
         return investments.stream()
                 .map(investment -> mapper
                         .map(investment, GetInvestmentDTO.class)).toList();
     }
 
-    public Double calculatePortfolioValue(String userEmail){
-        var investments = getInvestmentsByUser(userEmail);
+    public Double calculatePortfolioValue(Long id){
+        var investments = getInvestmentsByUser(id);
         Double portfolioValue = 0.0;
         for (GetInvestmentDTO investment: investments){
             portfolioValue += investment.currentPrice();

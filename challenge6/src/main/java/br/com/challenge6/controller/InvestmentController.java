@@ -25,15 +25,15 @@ public class InvestmentController {
     }
 
     @GetMapping
-    public ResponseEntity<List<GetInvestmentDTO>> getUserInvestment(@RequestParam String userEmail){
-        var investment = investmentService.getInvestmentsByUser(userEmail);
+    public ResponseEntity<List<GetInvestmentDTO>> getUserInvestment(@RequestParam Long id){
+        var investment = investmentService.getInvestmentsByUser(id);
 
         return ResponseEntity.ok().body(investment);
     }
 
     @GetMapping("/portfolio")
-    public ResponseEntity<Double> getPortfolioValue(@RequestParam String userEmail){
-        var value = investmentService.calculatePortfolioValue(userEmail);
+    public ResponseEntity<Double> getPortfolioValue(@RequestParam Long id){
+        var value = investmentService.calculatePortfolioValue(id);
 
         return ResponseEntity.ok(value);
     }
