@@ -16,8 +16,6 @@ public class InvestmentService {
     @Autowired
     private InvestmentRepository investmentRepository;
     @Autowired
-    private UserRepository userRepository;
-    @Autowired
     private ModelMapper mapper;
 
     public AddInvestmentDTO addInvestment(AddInvestmentDTO dto){
@@ -27,19 +25,24 @@ public class InvestmentService {
         return mapper.map(savedInvestment, AddInvestmentDTO.class);
     }
 
-    public List<GetInvestmentDTO> getInvestmentsByUser(Long id){
+    public List<GetInvestmentDTO> getInvestmentsByUser(Long id) {
         var investments = investmentRepository.findAllByUserId(id);
+
         return investments.stream()
-                .map(investment -> mapper
-                        .map(investment, GetInvestmentDTO.class)).toList();
+                .map(investment -> mapper.map(investment, GetInvestmentDTO.class))
+                .toList();
     }
 
-    public Double calculatePortfolioValue(Long id){
+    public Double calculatePortfolioValue(Long id) {
         var investments = getInvestmentsByUser(id);
-        Double portfolioValue = 0.0;
-        for (GetInvestmentDTO investment: investments){
-            portfolioValue += investment.currentPrice();
+        double portfolioValue = 0.0;
+
+        for (GetInvestmentDTO investment : investments) {
+            if (investment != null && investment.currentPrice() != null && investment.quantity() != null) {
+                portfolioValue += investment.currentPrice() * investment.quantity();
+            }
         }
+
         return portfolioValue;
     }
 }
