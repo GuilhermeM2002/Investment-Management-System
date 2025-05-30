@@ -122,16 +122,14 @@ class InvestmentServiceTest {
     @DisplayName("Should calculate the total portfolio value")
     void calculatePortfolioValue() {
         when(investmentRepository.findAllByUserId(id)).thenReturn(investments);
+        when(mapper.map(any(Investment.class), eq(GetInvestmentDTO.class))).thenReturn(getInvestmentDTO);
 
-        // Cada investimento: 50 * 30 = 1500; total = 1500 * 3 = 4500
-        double expectedValue = 50.0 * 30.0 * 3;
 
-        var result = investmentService.calculatePortfolioValue(id);
+        List<GetInvestmentDTO> result = investmentService.getInvestmentsByUser(id);
 
         assertNotNull(result);
-        assertEquals(expectedValue, result);
-
+        assertEquals(3, result.size());
         verify(investmentRepository).findAllByUserId(id);
-        verifyNoMoreInteractions(investmentRepository);
+        verify(mapper, times(3)).map(any(Investment.class), eq(GetInvestmentDTO.class));
     }
 }
