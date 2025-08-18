@@ -1,10 +1,13 @@
 package br.com.challenge6.services;
 
 import br.com.challenge6.domain.investment.Investment;
+import br.com.challenge6.domain.investment.StockPriceDTO;
 import jakarta.mail.*;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -29,6 +32,9 @@ public class NotificationService {
 
     @Value("${email.smtp.starttls.enable}")
     private boolean startTls;
+
+    @Autowired
+    private AlphaVantageService alphaVantageService;
 
     public void sendEmail(String to, String subject, String content) {
         Properties props = new Properties();
@@ -57,12 +63,16 @@ public class NotificationService {
         }
     }
 
-    public void notifyLost(List<Investment> investments, String userEmail){
+    @Scheduled(cron = "0 0 9 * * ?")
+    public void notifyLost(List<Investment> investments, String userEmail) {
         StringBuilder alertContent = new StringBuilder();
         boolean hasAlert = false;
 
         for (Investment inv : investments) {
-            double currentPrice = getCurrentPrice(inv.getTicker());
+            StockPriceDTO stock = alphaVantageService.getDailyTimeSeries(inv.getTicker());
+            if (stock == null) continue; // segurança caso a API não retorne dados
+
+            double currentPrice = stock.close();
             double buyPrice = inv.getBuyPrice();
 
             double variation = ((currentPrice - buyPrice) / buyPrice) * 100;
@@ -70,45 +80,50 @@ public class NotificationService {
             if (variation <= -10) {
                 hasAlert = true;
                 alertContent.append(String.format(
-                        "Alerta: %s caiu %.2f%% desde a compra. Preço atual: R$%.2f, comprado por: R$%.2f\n",
-                        inv.getTicker(), variation, currentPrice, buyPrice));
+                        "📉 Alerta: %s caiu %.2f%% desde a compra.%n" +
+                                "Data: %s | Preço atual: R$%.2f | Comprado por: R$%.2f | Máxima: R$%.2f | Mínima: R$%.2f | Volume: %d%n%n",
+                        stock.symbol(),
+                        variation,
+                        stock.date(),
+                        stock.close(),
+                        buyPrice,
+                        stock.high(),
+                        stock.low(),
+                        stock.volume()
+                ));
+            }
+        }
+
+        if (hasAlert) {
+            sendEmail(userEmail, "📉 Alerta de Queda em Investimentos", alertContent.toString());
+        }
+    }
+
+    @Scheduled(cron = "0 0 9 * * ?")
+    public void notifyHighGain(List<Investment> investmentList, String userEmail) {
+        StringBuilder alertContent = new StringBuilder();
+        boolean hasAlert = false;
+
+        for (Investment inv : investmentList) {
+            StockPriceDTO stock = alphaVantageService.getDailyTimeSeries(inv.getTicker());
+            if (stock == null) continue;
+
+            double currentPrice = stock.close();
+            double buyPrice = inv.getBuyPrice();
+
+            double variation = ((currentPrice - buyPrice) / buyPrice) * 100;
+
+            if (variation >= 10) {
+                hasAlert = true;
+                alertContent.append(String.format(
+                        "🚀 Alerta: %s cresceu %.2f%% desde a compra.%nData: %s | Preço atual: R$%.2f | Comprado por: R$%.2f | Máxima: R$%.2f | Mínima: R$%.2f%n",
+                        stock.symbol(), variation, stock.date(), stock.close(), buyPrice, stock.high(), stock.low()
+                ));
             }
         }
 
         if (hasAlert) {
             sendEmail(userEmail, "🚨 Alerta de Investimentos", alertContent.toString());
         }
-
-    }
-
-    public void notifyHighGain(List<Investment> investmentList, String userEmail){
-        StringBuilder alertContent = new StringBuilder();
-        boolean hasAlert = false;
-
-        for (Investment inv : investmentList) {
-            double currentPrice = getCurrentPrice(inv.getTicker());
-            double buyPrice = inv.getBuyPrice();
-
-            double variation = ((currentPrice - buyPrice) / buyPrice) * 100;
-
-            if(variation <= 10){
-                hasAlert = true;
-                alertContent.append(String.format(
-                        "Alerta: %s cresceu %.2f%% desde a compra. Preço atual: R$%.2f, comprado por: R$%.2f\n",
-                        inv.getTicker(), variation, currentPrice, buyPrice));
-            }
-        }
-        if (hasAlert){
-            sendEmail(userEmail, "🚨 Alerta de Investimentos", alertContent.toString());
-        }
-    }
-
-    private double getCurrentPrice(String ticker) {
-        return switch (ticker) {
-            case "PETR4" -> 22.50;
-            case "VALE3" -> 61.30;
-            case "ITUB4" -> 26.10;
-            default -> 50.00;
-        };
     }
 }
