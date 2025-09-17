@@ -8,6 +8,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -16,7 +17,7 @@ import java.time.LocalDate;
 @Document(collection = "investment")
 public class Investment {
     @Id
-    private Long id;
+    private UUID id;
     private Long userId;
     private String assetType;
     private String ticker;
