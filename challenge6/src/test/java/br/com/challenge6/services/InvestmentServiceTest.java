@@ -4,7 +4,6 @@ import br.com.challenge6.domain.investment.AddInvestmentDTO;
 import br.com.challenge6.domain.investment.GetInvestmentDTO;
 import br.com.challenge6.domain.investment.Investment;
 import br.com.challenge6.repository.InvestmentRepository;
-import br.com.challenge6.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -13,7 +12,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import java.time.LocalDate;
 import java.util.Arrays;

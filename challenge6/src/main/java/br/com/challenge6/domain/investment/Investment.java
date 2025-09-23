@@ -25,8 +25,4 @@ public class Investment {
     private Double buyPrice;
     private Double currentPrice;
     private LocalDate date;
-
-    public Double getProfit() {
-        return (currentPrice - buyPrice) * quantity;
-    }
 }

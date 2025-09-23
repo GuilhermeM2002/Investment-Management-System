@@ -38,15 +38,16 @@ public class AlphaVantageService {
             String lastDate = root.path("Meta Data").path("3. Last Refreshed").asText();
             JsonNode lastData = root.path("Time Series (Daily)").path(lastDate);
 
-            return new StockPriceDTO(
-                    ticker,
-                    LocalDate.parse(lastDate),
-                    lastData.path("1. open").asDouble(),
-                    lastData.path("2. high").asDouble(),
-                    lastData.path("3. low").asDouble(),
-                    lastData.path("4. close").asDouble(),
-                    lastData.path("5. volume").asLong()
-            );
+            StockPriceDTO stockPriceDTO = new StockPriceDTO();
+            stockPriceDTO.setSymbol(ticker);
+            stockPriceDTO.setDate(LocalDate.parse(lastDate));
+            stockPriceDTO.setOpen(lastData.path("1. open").asDouble());
+            stockPriceDTO.setHigh(lastData.path("2. high").asDouble());
+            stockPriceDTO.setLow(lastData.path("3. low").asDouble());
+            stockPriceDTO.setClose(lastData.path("4. close").asDouble());
+            stockPriceDTO.setVolume(lastData.path("5. volume").asLong());
+
+            return stockPriceDTO;
 
         } catch (Exception e) {
             throw new StockDataNotFoundException(ticker, e);

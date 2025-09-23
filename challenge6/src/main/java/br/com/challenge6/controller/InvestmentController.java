@@ -2,6 +2,7 @@ package br.com.challenge6.controller;
 
 import br.com.challenge6.domain.investment.AddInvestmentDTO;
 import br.com.challenge6.domain.investment.GetInvestmentDTO;
+import br.com.challenge6.domain.investment.StockPriceDTO;
 import br.com.challenge6.services.InvestmentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -31,10 +32,17 @@ public class InvestmentController {
         return ResponseEntity.ok().body(investment);
     }
 
-    @GetMapping("/portfolio")
-    public ResponseEntity<Double> getPortfolioValue(@RequestParam Long id){
+    @GetMapping("/portfolio/{id}")
+    public ResponseEntity<Double> getPortfolioValue(@PathVariable("id") Long id){
         var value = investmentService.calculatePortfolioValue(id);
 
         return ResponseEntity.ok(value);
+    }
+
+    @GetMapping("/stock")
+    public ResponseEntity<StockPriceDTO> getStockPrice(@RequestBody GetInvestmentDTO dto){
+        var stock = investmentService.getStockPrice(dto);
+
+        return ResponseEntity.ok(stock);
     }
 }
